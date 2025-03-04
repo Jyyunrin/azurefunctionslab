@@ -26,7 +26,7 @@
 
 @code {
 
-    List<KeyValuePair<string, int>> schoolCount;
+    Dictionary<string, int> schoolCount;
     
 
 protected override async Task OnInitializedAsync() {
@@ -34,7 +34,7 @@ protected override async Task OnInitializedAsync() {
   }
     
   protected async Task load() {
-    schoolCount = await httpClient.GetFromJsonAsync<List<KeyValuePair<string, int>>>($"{Constants.BASE_URL}api/students/count-by-school");
+    schoolCount = await httpClient.GetFromJsonAsync<Dictionary<string, int>>($"{Constants.BASE_URL}api/students/count-by-school");
   }
 
 }

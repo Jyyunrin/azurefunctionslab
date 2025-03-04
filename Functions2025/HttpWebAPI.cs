@@ -141,11 +141,12 @@ public class HttpWebAPI
     ) 
     {
         _logger.LogInformation("C# HTTP GET/posts trigger function processed a request.");
-        var studentsBySchool = _context.Students.Where(s => string.Equals(s.School, school, StringComparison.OrdinalIgnoreCase)).ToArray();  
-        _logger.LogInformation(JsonConvert.SerializeObject(studentsBySchool));
+        var studentsBySchool = _context.Students
+        .Where(s => s.School!.ToLower() == school.ToLower())
+        .ToList(); 
 
 
-        if(studentsBySchool.Length == 0)
+        if(studentsBySchool.Count == 0)
         {
             var response = req.CreateResponse(HttpStatusCode.NotFound);
             response.Headers.Add("Content-Type", "application/json");
