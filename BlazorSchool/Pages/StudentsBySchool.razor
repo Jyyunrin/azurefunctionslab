@@ -1,0 +1,107 @@
+﻿@page "/school/{school}"
+@inject HttpClient httpClient
+@inject NavigationManager navManager
+
+<select @bind="SelectedSchool" class="form-control">
+    <option disabled selected>-- Select a School --</option>
+    @foreach (var s in schools)
+    {
+        <option value="@s">@s</option>
+    }
+</select>
+
+<h3>Students In @school</h3>
+
+@if (students == null) {
+<p><em>Loading...</em></p>
+} else {
+<table class='table table-hover'>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>School</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in students) {
+    <tr>
+      <td>@item.StudentId</td>
+      <td>@item.FirstName</td>
+      <td>@item.LastName</td>
+      <td>@item.School</td>
+      <td><a class="btn btn-success btn-sm" href="/updel/@item.StudentId/edit">edit</a></td>
+      <td><a class="btn btn-danger btn-sm" href="/updel/@item.StudentId/del">del</a></td> 
+    </tr>
+    }
+  </tbody>
+</table>
+}
+
+@code {
+    Student[]? students;
+
+    [Parameter]
+    public string school { get; set;}
+    private List<string> schools = new();
+    private string selectedSchool;
+
+  protected override async Task OnInitializedAsync() {
+    await LoadStudentsAndSchools(); // Fetch students and extract schools
+    await LoadStudentsForSelectedSchool(); // Load students for the given school
+  }
+
+  private async Task LoadStudentsAndSchools()
+    {
+        try
+        {
+            var allStudents = await httpClient.GetFromJsonAsync<Student[]>($"{Constants.BASE_URL}api/students");
+            if (allStudents != null)
+            {
+                // Extract unique schools from students
+                schools = allStudents.Select(s => s.School).Distinct().OrderBy(s => s).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching students: {ex.Message}");
+        }
+    }
+
+    private async Task LoadStudentsForSelectedSchool()
+    {
+        if (!string.IsNullOrWhiteSpace(school))
+        {
+            try
+            {
+                students = await httpClient.GetFromJsonAsync<Student[]>($"{Constants.BASE_URL}api/students/school/{school}");
+            }
+            catch (HttpRequestException)
+            {
+                students = Array.Empty<Student>();
+            }
+        }
+    }
+
+    private string SelectedSchool
+    {
+        get => selectedSchool;
+        set
+        {
+            if (selectedSchool != value)
+            {
+                selectedSchool = value;
+                navManager.NavigateTo($"/school/{selectedSchool}");
+            }
+        }
+    }
+
+    //Runs every time the route parameter changes
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadStudentsForSelectedSchool();
+    }
+}
